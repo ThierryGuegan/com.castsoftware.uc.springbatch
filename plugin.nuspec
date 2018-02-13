@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>com.castsoftware.uc.springbatch</id>
+    <version>2.0.0</version>
+    <title>Spring Batch analyzer</title>
+    <authors>User Community</authors>
+    <owners>CAST</owners>
+    <licenseUrl>https://extend.castsoftware.com/V2/Licenses/Cast-Licence-UserCommunity-1.0.html</licenseUrl>       
+    <projectUrl>https://github.com/CAST-Extend/com.castsoftware.uc.springbatch</projectUrl>
+    <iconUrl>https://raw.githubusercontent.com/CAST-Extend/com.castsoftware.uc.springbatch/master/logo_spring_batch.jpg</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>This plugin provides a Spring Batch analyzer. This plugin is Function Points calculation oriented, meant to create links between Spring Batch objects and the rest of the application.</description>
+    <tags>Framework SpringBatch CSS techno:JEE</tags>
+    <releaseNotes>TBD</releaseNotes>
+    <dependencies>
+      <dependency id="CAIP" version="8.0.0" />
+    </dependencies>
+  </metadata>
+</package>
