@@ -9,6 +9,9 @@ Spring Batch is an open source framework for batch processing. It is a lightweig
 This technical package is deliver "as-is". It has been used in a limited number of situations.
 This package has been tested in CAST 8.1.x 
 
+## Warning  
+The meta-model (Spring_Batch vs SpringBatch) has changed starting from 2.1.0 version. 
+
 ## Additional types of objects bring by this extension 
 Objects being part of Spring Batch Metamodel : Job, Step, Tasklet, Chunk  
 
