@@ -3,7 +3,7 @@ Created on 18 feb 2017
 
 @author: TGU
 '''
-import cast_upgrades.cast_upgrade_1_5_16 # @UnusedImport
+import cast_upgrades.cast_upgrade_1_5_20 # @UnusedImport
 from cast.application import ApplicationLevelExtension, ReferenceFinder, create_link
 import logging
 
@@ -35,10 +35,10 @@ class TilesAndSpringWebflowApplication(ApplicationLevelExtension):
             bean = link.get_caller() 
             bean_name = bean.get_name()
             #logging.debug("Spring Bean [" + bean_name + "]")
-            logging.info(" Adding a link call between the bean and the class it rely on") 
+            logging.info(" Adding a link call between the bean and the class it relies on : " + bean_name + " to " + link.get_callee().get_name())
             create_link('callLink', bean, link.get_callee())
-            if bean_name in self.beans: 
-                logging.info(" ---- Warning duplicate on Bean1 [" + bean_name + "]") 
+            if bean_name in self.beans:
+                logging.info(" ---- Warning duplicate on Spring Bean : " + bean_name)
             else: 
                 self.beans[bean_name] = bean
         
@@ -46,10 +46,10 @@ class TilesAndSpringWebflowApplication(ApplicationLevelExtension):
             bean = link.get_caller() 
             bean_name = bean.get_name()
             #logging.debug("JEE Scoped Bean [" + bean_name + "]")
-            logging.info(" Adding a call link between the bean and the class it rely on") 
+            logging.info(" Adding a link call between the bean and the class it relies on : " + bean_name + " to " + link.get_callee().get_name())
             create_link('callLink', bean, link.get_callee())            
             if bean_name in self.beans: 
-                logging.info(" ---- Warning duplicate on Bean2 [" + bean_name + "]") 
+                logging.info(" ---- Warning duplicate on JSP Bean : " + bean_name)
             else: 
                 self.beans[bean_name] = bean    
             
@@ -57,30 +57,31 @@ class TilesAndSpringWebflowApplication(ApplicationLevelExtension):
             bean = link.get_caller() 
             bean_name = bean.get_name()
             #logging.debug("XML Bean [" + bean_name + "]")
-            logging.info(" Adding a call link between the bean and the class it rely on") 
+            logging.info(" Adding a link call between the bean and the class it relies on : " + bean_name + " to " + link.get_callee().get_name())
             create_link('callLink', bean, link.get_callee())
             if bean_name in self.beans: 
-                logging.info(" ---- Warning duplicate on Bean3 [" + bean_name + "]") 
+                logging.info(" ---- Warning duplicate on XML Bean : " + bean_name)
             else: 
                 self.beans[bean_name] = bean    
             
     def SpringBatchJobList(self, application):
-    
-        for springBatchJob in application.objects().has_type('SpringBatchJob'):     
+
+        logging.info("Check if there are duplicate Batch Job Names")
+        for springBatchJob in application.objects().has_type('Spring_BatchJob'):
             springBatchJob_name = springBatchJob.get_name()
-            #logging.info("Spring Batch Job Name = [" + springBatchJob_name + "]") 
-            if springBatchJob_name in self.springBatchJob: 
-                logging.info(" ---- Warning duplicate on Spring Batch Job [" + springBatchJob_name + "]") 
+            if springBatchJob_name in self.springBatchJob:
+                logging.info(" ---- Warning duplicate on Spring Batch Job : " + springBatchJob.get_fullname())
             else: 
                 self.springBatchJob[springBatchJob_name] = springBatchJob
             
     def SpringBatchStepList(self, application):
     
-        for springBatchStep in application.objects().has_type('SpringBatchStep'):     
+        logging.info("Check if there are duplicate Batch Step Names")
+        for springBatchStep in application.objects().has_type('Spring_BatchStep'):
             springBatchStep_name = str(springBatchStep.get_name())
             #logging.info("Spring Batch Step Name = [" + springBatchStep_name + "]") 
             if springBatchStep_name in self.springBatchStep: 
-                logging.info(" ---- Warning duplicate on Spring Batch Step [" + springBatchStep_name + "]") 
+                logging.info(" ---- Warning duplicate on Spring Batch Step : " + springBatchStep.get_fullname())
             else: 
                 self.springBatchStep[springBatchStep_name] = springBatchStep    
     
@@ -89,10 +90,10 @@ class TilesAndSpringWebflowApplication(ApplicationLevelExtension):
         nb_links = 0 
         nb_links2 = 0 
                 
-        for springBatchStep in application.objects().has_type('SpringBatchStep').load_property('SpringBatchStep.step_tasklet').load_property('SpringBatchStep.step_next').load_property('SpringBatchStep.step_tasklet_chunk').load_property('SpringBatchStep.step_tasklet_transaction_manager'):     
+        for springBatchStep in application.objects().has_type('Spring_BatchStep').load_property('Spring_BatchStep.step_tasklet').load_property('Spring_BatchStep.step_next').load_property('Spring_BatchStep.step_tasklet_chunk').load_property('Spring_BatchStep.step_tasklet_transaction_manager'):
             #logging.info(" Spring Batch Step : [" + str(springBatchStep_name) + "]")
             
-            springBatchStep_tasklet = springBatchStep.get_property('SpringBatchStep.step_tasklet')
+            springBatchStep_tasklet = springBatchStep.get_property('Spring_BatchStep.step_tasklet')
             #logging.info("== Spring Batch Tasklet = [" + str(springBatchStep_tasklet) + "]") 
             if not springBatchStep_tasklet is None: 
                 if springBatchStep_tasklet in self.beans:
@@ -104,7 +105,7 @@ class TilesAndSpringWebflowApplication(ApplicationLevelExtension):
                 else: 
                     logging.info(" Tasklet ref : bean not found = [" + str(springBatchStep_tasklet) + "]") 
 
-            springBatchStep_tasklet_transaction_manager = springBatchStep.get_property('SpringBatchStep.step_tasklet_transaction_manager')
+            springBatchStep_tasklet_transaction_manager = springBatchStep.get_property('Spring_BatchStep.step_tasklet_transaction_manager')
             if not springBatchStep_tasklet_transaction_manager is None: 
                 logging.info("== Spring Batch Tasklet Transaction-manager= [" + str(springBatchStep_tasklet_transaction_manager) + "]") 
                 if springBatchStep_tasklet_transaction_manager in self.beans:
@@ -116,7 +117,7 @@ class TilesAndSpringWebflowApplication(ApplicationLevelExtension):
                 else: 
                     logging.info(" Tasklet transaction-manager : bean not found = [" + str(springBatchStep_tasklet) + "]") 
 
-            springBatchStep_next = springBatchStep.get_property('SpringBatchStep.step_next') 
+            springBatchStep_next = springBatchStep.get_property('Spring_BatchStep.step_next')
             #logging.info("== Spring Batch Next = [" + str(springBatchStep_next) + "]")                          
             if not springBatchStep_next is None: 
                 next_split = springBatchStep_next.split('#') 
@@ -131,7 +132,7 @@ class TilesAndSpringWebflowApplication(ApplicationLevelExtension):
                         if springBatchStep_next_split != "": 
                             logging.info(" Next : step not found = [" + str(springBatchStep_next_split) + "]") 
                                
-            springBatchStep_chunk = springBatchStep.get_property('SpringBatchStep.step_tasklet_chunk') 
+            springBatchStep_chunk = springBatchStep.get_property('Spring_BatchStep.step_tasklet_chunk')
             if not springBatchStep_chunk is None: 
                 logging.info("== Spring Batch Next = [" + str(springBatchStep_chunk) + "]")                          
                 chunk_split = springBatchStep_chunk.split('#') 
@@ -144,7 +145,7 @@ class TilesAndSpringWebflowApplication(ApplicationLevelExtension):
                             logging.debug("Creating link between " + str(springBatchStep) + " and " + str(target_bean))
                             nb_links += 1 
                         else: 
-                            logging.info(" Chunk : bean not found = [" + str(springBatchStep_next_split) + "]") 
+                            logging.info(" Chunk : bean not found = [" + str(springBatchStep_chunk_split) + "]")
                                                            
         logging.debug("Nb of links created between Spring Batch Step and Beans : " + str(nb_links))
         logging.debug("Nb of links created between Spring Batch Step and other Spring Batch Step : " + str(nb_links2))        
@@ -194,23 +195,14 @@ class TilesAndSpringWebflowApplication(ApplicationLevelExtension):
     def Call_from_spring_Batch_Job_to_Step(self, application):
         
         nb_links = 0
+        for springBatchJob in application.objects().has_type('Spring_BatchJob'):
+            springBatchJob.load_children()
+            for springBatchStep in springBatchJob.get_children():
+                create_link('callLink', springBatchJob, springBatchStep)
+                logging.info("Creating link between " + springBatchJob.get_fullname() + " and " + springBatchStep.get_name())
+                nb_links += 1
 
-        for springBatchStep in application.objects().has_type('SpringBatchStep'):     
-            springBatchStep_full_name = springBatchStep.get_fullname()
-            #logging.info(" Spring Batch Step name : [" + str(springBatchStep) + "]")
-            
-            springBatchjob_full_name = springBatchStep_full_name[:-(len(springBatchStep.get_name())+1)]
-            springBatchjob_name = springBatchjob_full_name.split('].')[1]
-            #logging.info(" Spring Batch Job full name : [" + str(springBatchjob_full_name) + "]")           
-            if springBatchjob_name in self.springBatchJob: 
-                SpringBatchJob = self.springBatchJob[springBatchjob_name]
-                create_link('callLink', SpringBatchJob, springBatchStep)
-                logging.debug("Creating link between " + str(SpringBatchJob) + " and " + str(springBatchStep))
-                nb_links += 1 
-            else: 
-                logging.debug("Spring Batch Job not found [" + str(springBatchjob_name) + "]")
-            
-        logging.debug("Nb of links created between Spring Batch Job  and Spring Batch Step : " + str(nb_links))
+       #logging.Info("Nb of links created between Spring Batch Jobs and Spring Batch Steps : " + str(nb_links))
         self.global_nb_links += nb_links        
         
         
@@ -224,18 +216,19 @@ class TilesAndSpringWebflowApplication(ApplicationLevelExtension):
         delete from CI_LINKS;        
         insert into CI_LINKS (CALLER_ID, CALLED_ID, LINK_TYPE, ERROR_ID)                      
         select tasklet.object_id, tasklet_method.object_id, 'callLink', 0 
-         from ctv_links relation, cdt_objects super, cdt_objects tasklet, cdt_objects tasklet_method, ctv_link_types types, csv_objects csv
+        from ctv_links relation, cdt_objects super, cdt_objects tasklet, cdt_objects tasklet_method, ctv_link_types types, csv_objects csv
         where relation.called_id    = super.object_id
-          and relation.caller_id = tasklet.object_id 
-          and relation.link_type_lo = types.link_type_lo
-          and relation.link_type_hi = types.link_type_hi
-          and types.link_type_name like 'inherit%'
-          and super.object_language_name = 'Java'
-          and tasklet.object_type_str = 'Java Class' 
-          and super.object_fullname = 'org.springframework.batch.core.step.tasklet.Tasklet'
-          and super.object_type_str = 'Java Interface' 
-          and csv.object_id = tasklet_method.object_id
-          and csv.parent_id = tasklet.object_id
-          and tasklet_method.object_type_str = 'Java Method'
-          ;
-        """)            
+        and relation.caller_id = tasklet.object_id 
+        and relation.link_type_lo = types.link_type_lo
+        and relation.link_type_hi = types.link_type_hi
+        and types.link_type_name like 'inherit%'
+        and super.object_language_name = 'Java'
+        and tasklet.object_type_str in ('Java Class' , 'Generic Java Class')
+        and ( super.object_fullname = 'org.springframework.batch.core.step.tasklet.Tasklet' or 
+              super.object_fullname like 'org.springframework.batch.item%')
+        and super.object_type_str in ('Java Class' , 'Java Instantiated Interface', 'Java Interface') 
+        and csv.object_id = tasklet_method.object_id
+        and csv.parent_id = tasklet.object_id
+        and tasklet_method.object_type_str = 'Java Method'
+        ;
+        """)

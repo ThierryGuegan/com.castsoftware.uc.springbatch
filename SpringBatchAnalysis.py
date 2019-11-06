@@ -5,13 +5,17 @@ Created on 2 feb 2017
 '''
 import cast.analysers.jee
 from cast.analysers import Bookmark
-from xml.dom import minidom 
+from xml.dom import minidom
+from cast.application import create_link
+
  
 class SpringBatchAnalysis(cast.analysers.jee.Extension):
  
     def __init__(self):
         self.NbSpringBatchJobCreated = 0
         self.NbSpringBatchStepCreated = 0
+        self.beans = {}
+
  
     def start_analysis(self,options):
         
@@ -37,34 +41,61 @@ class SpringBatchAnalysis(cast.analysers.jee.Extension):
         
         cast.analysers.log.info('Scanning XML file : ' + xmlfilepath)
         self.analyseXMLSpringBatchFile(xmlfilepath, file)
-            
-    
+
     def analyseXMLSpringBatchFile(self, xmlfilepath, file):        
              
         cast.analysers.log.info('Scanning XML Spring Batch files ... : ' + xmlfilepath)
 
         with minidom.parse(xmlfilepath) as doc: 
             root = doc.documentElement
-        
-            for SpringBatch_job in root.getElementsByTagName('batch:job'):
-                job_id =  SpringBatch_job.getAttribute('id')
+
+            job_tagname = ''
+
+            if root.getElementsByTagName('batch:job').length > 0:
+                job_tagname = 'batch:job'
+                cast.analysers.log.info('Number of "batch:job" tag: ' + str(root.getElementsByTagName('batch:job').length))
+            else:
+                if root.getElementsByTagName('job').length > 0:
+                    job_tagname = 'job'
+                    cast.analysers.log.info('Number of "job" tag: ' + str(root.getElementsByTagName('job').length))
+                else:
+                    cast.analysers.log.info('No Spring Batch Job')
+
+            for SpringBatch_job in root.getElementsByTagName(job_tagname):
+                job_id = SpringBatch_job.getAttribute('id')
                 cast.analysers.log.info('job Id : ' + job_id)
 
                 objectJob = cast.analysers.CustomObject()
                 objectJob.set_name(job_id)
-                objectJob.set_type('SpringBatchJob')
+                objectJob.set_type('Spring_BatchJob')
                 objectJob.set_parent(file)
                 objectJob.save()
-                self.NbSpringBatchJobCreated += 1                
-                bookmark = Bookmark(file, 1, 1, -1, -1) # TODO : find exact position 
+
+                self.NbSpringBatchJobCreated += 1
+
+                #for num, line in enumerate(file, 1):
+                #    if job_id in line:
+                #        break
+                bookmark = Bookmark(file, 1, 1, -1, -1) # TODO : find exact position
                 objectJob.save_position(bookmark)
 
-                for SpringBatch_step in  SpringBatch_job.getElementsByTagName('batch:step'):
+                step_tagname = ''
+                if root.getElementsByTagName('batch:step').length > 0:
+                    step_tagname = 'batch:step'
+                    cast.analysers.log.info('Number of "batch:step" tag: ' + str(root.getElementsByTagName('batch:step').length))
+                else:
+                    if root.getElementsByTagName('step').length > 0:
+                        step_tagname = 'step'
+                        cast.analysers.log.info('Number of "step" tag: ' + str(root.getElementsByTagName('step').length))
+                    else:
+                        cast.analysers.log.info('No Spring Batch Step')
+
+                for SpringBatch_step in SpringBatch_job.getElementsByTagName(step_tagname):
                     step_id = SpringBatch_step.getAttribute('id')
                     cast.analysers.log.info('==== step id : ' + step_id)
                     objectStep = cast.analysers.CustomObject()
                     objectStep.set_name(step_id)
-                    objectStep.set_type('SpringBatchStep')
+                    objectStep.set_type('Spring_BatchStep')
                     objectStep.set_parent(objectJob)
                     objectStep.save()
                     self.NbSpringBatchStepCreated += 1
@@ -72,77 +103,90 @@ class SpringBatchAnalysis(cast.analysers.jee.Extension):
                     objectStep.save_position(bookmark)
                     
                     tasklet_chunk = ''
-                    
+
                     for SpringBatch_tasklet in SpringBatch_step.getElementsByTagName('batch:tasklet'):
                         step_tasklet = SpringBatch_tasklet.getAttribute('ref')
                         cast.analysers.log.info('======== tasklet ref : ' + step_tasklet)
                         step_tasklet_transaction_manager = SpringBatch_tasklet.getAttribute('transaction-manager')
-                        cast.analysers.log.info('======== tasklet transaction-manager : ' + step_tasklet_transaction_manager)
-                               
+                        cast.analysers.log.info(
+                            '======== tasklet transaction-manager : ' + step_tasklet_transaction_manager)
+
                         for SpringBatch_tasklet_chunk in SpringBatch_tasklet.getElementsByTagName('chunk'):
                             step_tasklet_chunk_reader = SpringBatch_tasklet_chunk.getAttribute('reader')
-                            cast.analysers.log.info('======== tasklet chunk reader : ' + step_tasklet_chunk_reader) 
+                            cast.analysers.log.info('======== tasklet chunk reader : ' + step_tasklet_chunk_reader)
                             tasklet_chunk += step_tasklet_chunk_reader + "#"
                             step_tasklet_chunk_writer = SpringBatch_tasklet_chunk.getAttribute('writer')
-                            cast.analysers.log.info('======== tasklet chunk writer : ' + step_tasklet_chunk_writer) 
+                            cast.analysers.log.info('======== tasklet chunk writer : ' + step_tasklet_chunk_writer)
                             tasklet_chunk += step_tasklet_chunk_writer + "#"
                             step_tasklet_chunk_processor = SpringBatch_tasklet_chunk.getAttribute('processor')
-                            cast.analysers.log.info('======== tasklet chunk processor : ' + step_tasklet_chunk_processor) 
+                            cast.analysers.log.info(
+                                '======== tasklet chunk processor : ' + step_tasklet_chunk_processor)
                             tasklet_chunk += step_tasklet_chunk_processor + "#"
                             cast.analysers.log.info('======== tasklet chunk : ' + tasklet_chunk)
 
                         for SpringBatch_tasklet_chunk in SpringBatch_tasklet.getElementsByTagName('batch:chunk'):
                             step_tasklet_chunk_reader = SpringBatch_tasklet_chunk.getAttribute('reader')
-                            cast.analysers.log.info('======== tasklet chunk reader : ' + step_tasklet_chunk_reader) 
+                            cast.analysers.log.info('======== tasklet chunk reader : ' + step_tasklet_chunk_reader)
                             tasklet_chunk += step_tasklet_chunk_reader + "#"
                             step_tasklet_chunk_writer = SpringBatch_tasklet_chunk.getAttribute('writer')
-                            cast.analysers.log.info('======== tasklet chunk writer : ' + step_tasklet_chunk_writer) 
+                            cast.analysers.log.info('======== tasklet chunk writer : ' + step_tasklet_chunk_writer)
                             tasklet_chunk += step_tasklet_chunk_writer + "#"
                             step_tasklet_chunk_processor = SpringBatch_tasklet_chunk.getAttribute('processor')
-                            cast.analysers.log.info('======== tasklet chunk processor : ' + step_tasklet_chunk_processor) 
+                            cast.analysers.log.info(
+                                '======== tasklet chunk processor : ' + step_tasklet_chunk_processor)
                             tasklet_chunk += step_tasklet_chunk_processor + "#"
                             cast.analysers.log.info('======== tasklet chunk : ' + tasklet_chunk)
-                        
+
                     for SpringBatch_tasklet in SpringBatch_step.getElementsByTagName('tasklet'):
                         step_tasklet = SpringBatch_tasklet.getAttribute('ref')
-                        cast.analysers.log.info('======== tasklet ref : ' + step_tasklet)   
+                        cast.analysers.log.info('======== tasklet ref : ' + step_tasklet)
                         step_tasklet_transaction_manager = SpringBatch_tasklet.getAttribute('transaction-manager')
-                        cast.analysers.log.info('======== tasklet transaction-manager : ' + step_tasklet_transaction_manager) 
-                    
+                        cast.analysers.log.info(
+                            '======== tasklet transaction-manager : ' + step_tasklet_transaction_manager)
+
                         for SpringBatch_tasklet_chunk in SpringBatch_tasklet.getElementsByTagName('chunk'):
                             step_tasklet_chunk_reader = SpringBatch_tasklet_chunk.getAttribute('reader')
-                            cast.analysers.log.info('======== tasklet chunk reader : ' + step_tasklet_chunk_reader) 
+                            cast.analysers.log.info('======== tasklet chunk reader : ' + step_tasklet_chunk_reader)
                             tasklet_chunk += step_tasklet_chunk_reader + "#"
                             step_tasklet_chunk_writer = SpringBatch_tasklet_chunk.getAttribute('writer')
-                            cast.analysers.log.info('======== tasklet chunk writer : ' + step_tasklet_chunk_writer) 
+                            cast.analysers.log.info('======== tasklet chunk writer : ' + step_tasklet_chunk_writer)
                             tasklet_chunk += step_tasklet_chunk_writer + "#"
                             step_tasklet_chunk_processor = SpringBatch_tasklet_chunk.getAttribute('processor')
-                            cast.analysers.log.info('======== tasklet chunk processor : ' + step_tasklet_chunk_processor) 
+                            cast.analysers.log.info(
+                                '======== tasklet chunk processor : ' + step_tasklet_chunk_processor)
                             tasklet_chunk += step_tasklet_chunk_processor + "#"
                             cast.analysers.log.info('======== tasklet chunk : ' + tasklet_chunk)
 
                         for SpringBatch_tasklet_chunk in SpringBatch_tasklet.getElementsByTagName('batch:chunk'):
                             step_tasklet_chunk_reader = SpringBatch_tasklet_chunk.getAttribute('reader')
-                            cast.analysers.log.info('======== tasklet chunk reader : ' + step_tasklet_chunk_reader) 
+                            cast.analysers.log.info('======== tasklet chunk reader : ' + step_tasklet_chunk_reader)
                             tasklet_chunk += step_tasklet_chunk_reader + "#"
                             step_tasklet_chunk_writer = SpringBatch_tasklet_chunk.getAttribute('writer')
-                            cast.analysers.log.info('======== tasklet chunk writer : ' + step_tasklet_chunk_writer) 
+                            cast.analysers.log.info('======== tasklet chunk writer : ' + step_tasklet_chunk_writer)
                             tasklet_chunk += step_tasklet_chunk_writer + "#"
                             step_tasklet_chunk_processor = SpringBatch_tasklet_chunk.getAttribute('processor')
-                            cast.analysers.log.info('======== tasklet chunk processor : ' + step_tasklet_chunk_processor) 
+                            cast.analysers.log.info(
+                                '======== tasklet chunk processor : ' + step_tasklet_chunk_processor)
                             tasklet_chunk += step_tasklet_chunk_processor + "#"
-                            cast.analysers.log.info('======== tasklet chunk : ' + tasklet_chunk)                  
-                    
-                    objectStep.save_property('SpringBatchStep.step_tasklet', str(step_tasklet))
-                    objectStep.save_property('SpringBatchStep.step_tasklet_transaction_manager', str(step_tasklet_transaction_manager))
-                    objectStep.save_property('SpringBatchStep.step_tasklet_chunk', str(tasklet_chunk))
+                            cast.analysers.log.info('======== tasklet chunk : ' + tasklet_chunk)
+
+                    objectStep.save_property('Spring_BatchStep.step_tasklet', str(step_tasklet))
+                    objectStep.save_property('Spring_BatchStep.step_tasklet_transaction_manager', str(step_tasklet_transaction_manager))
+                    objectStep.save_property('Spring_BatchStep.step_tasklet_chunk', str(tasklet_chunk))
 
                     step_next = ''
 
-                    for SpringBatch_next in SpringBatch_step.getElementsByTagName('batch:next'):
+                    next_tagname = ''
+                    if root.getElementsByTagName('batch:next').length > 0:
+                        next_tagname = 'batch:next'
+                    else:
+                        next_tagname = 'next'
+                    cast.analysers.log.info('Spring Batch Next Tag : ' + next_tagname)
+
+                    for SpringBatch_next in SpringBatch_step.getElementsByTagName(next_tagname):
                         next_to = SpringBatch_next.getAttribute('to')
                         step_next += next_to + "#"
                         cast.analysers.log.info('======== next to : ' + next_to)
                                                 
-                    objectStep.save_property('SpringBatchStep.step_next', str(step_next))
-    
+                    objectStep.save_property('Spring_BatchStep.step_next', str(step_next))
+

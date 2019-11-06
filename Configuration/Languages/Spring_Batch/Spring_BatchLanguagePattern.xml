@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<languagePattern id="Spring_Batch">
+	<escape><![CDATA[\]]></escape>
+	
+	<comment>
+		<begin><![CDATA[(^|[[:blank:]]+)#]]></begin>
+		<end><![CDATA[\r\n]]></end>
+		<multiline>false</multiline>
+	</comment>	
+	
+    <string>
+      <!-- <begin><![CDATA[(\-|/|=|-d|[[:blank:]]+)"]]></begin> -->
+      <begin><![CDATA[(?<!CAST_HERE_ESQL)(?<!CAST_HERE_DOCUMENT)"(?!CAST_HERE)]]></begin>      
+		<end><![CDATA["]]></end>
+		<escape><![CDATA[\]]></escape>
+		<multiline>true</multiline>      
+	</string>
+
+    <string>
+      <!-- <begin><![CDATA[(\-|/|=|-d|[[:blank:]]+)']]></begin> -->
+      <begin><![CDATA[(?<!CAST_HERE_ESQL)(?<!CAST_HERE_DOCUMENT)'(?!CAST_HERE)]]></begin>
+		<end><![CDATA[']]></end>
+		<!-- <escape><![CDATA[\]]></escape> -->
+		<multiline>true</multiline>      
+	</string>
+   
+    <string>
+      <begin><![CDATA[CAST_HERE_DOCUMENT]]></begin>
+		<end><![CDATA[CAST_HERE_DOCUMENT]]></end>
+		<multiline>true</multiline>      
+	</string>
+   
+    <string>
+      <begin><![CDATA[CAST_HERE_ESQL]]></begin>
+		<end><![CDATA[CAST_HERE_ESQL]]></end>
+		<multiline>true</multiline>      
+	</string>
+   
+<!--   	<esql>
+	    <begin><![CDATA[sqlplus[[:word:]\$\ ]*\<\<[ ]*END]]></begin>
+	    <end><![CDATA[END]]></end>
+  	</esql>
+ -->	
+ 
+  	<esql>
+	    <begin><![CDATA[CAST_HERE_ESQL]]></begin>
+	    <end><![CDATA[CAST_HERE_ESQL]]></end>
+  	</esql>
+   
+   <esql>
+		<begin><![CDATA[(?i)\bfrom\s+(?=[\w+\.\s\$]*[\$\w]+\s*[\$\w]+\s*(,|;|\(|\)|\"|'|(\s+(join|for|where|having|group|order|union|intersect|except|limit|offset|fetch)\b)))]]></begin>
+      <end><![CDATA[(?i)(\s*(;|\"|')|\s+\b(where|having|group|order|union|intersect|except|limit|offset|fetch|for)\b)]]></end>
+      <!-- <end><![CDATA[(?i)($(?!.+?(\bwhere\b|;))|\bwhere\b|;|\"|')]]></end> -->
+   </esql>
+ 
+	<esql>
+		<!-- <begin><![CDATA[(?i)\b(select|sel)\b.+?\bfrom\b\s*(?=(\w\.\s*)?\s*(\w+)\s*(\w+)?\s*(\"|'|,|\b(join|where|having|group|order|union|intersect|except|limit|offset|fetch|for)\b))]]></begin> -->
+      <begin><![CDATA[(?i)\b(select|sel)\s+.+?\bfrom\s+[\w+\.\s\$]*[\$\w]+\s*[\$\w]+\s*(,|;|\(|\)|\"|'|(\s+(join|for|where|having|group|order|union|intersect|except|limit|offset|fetch)\b))]]></begin>
+		<end><![CDATA[(?i)(\s*(;|$|\"|')|\s+\b(where|having|group|order|union|intersect|except|limit|offset|fetch|for)\b)]]></end>
+	</esql>
+
+	<esql>
+		<begin><![CDATA[(?i)\bINSERT[[:space:]]+INTO[[:space:]]+]]></begin>
+		<end><![CDATA[($|;|\"|')]]></end>
+	</esql>
+	
+	<esql>
+		<begin><![CDATA[(?i)\bupdate\s+[\w+\.\s\$]*[\$\w]+\s*[\$\w]+\s*(?=[\\\n\s]*set\b|\"|')]]></begin>
+		<end><![CDATA[(\bset\b|\"|'|$)]]></end>
+	</esql>
+   
+	<esql>
+		<begin><![CDATA[(?i)\bjoin\b(?=\s*(\w\.\s*)?\s*(\w+)\s*(\w+)?\s*\bon\b)]]></begin>
+		<end><![CDATA[(?i)\bon\b]]></end>
+	</esql>
+    
+	<esql>
+	    <begin><![CDATA[[eE][xX][eE][cC][ ]+]]></begin>
+	    <end><![CDATA[$]]></end>
+  	</esql>
+</languagePattern>
